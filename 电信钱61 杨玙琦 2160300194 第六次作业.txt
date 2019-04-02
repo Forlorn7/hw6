@@ -1,0 +1,50 @@
+1、2.
+a=imread('lena.bmp');
+ave1=0;sq1=0.02;
+ave2=0;sq2=0.02;
+t1=imnoise(a,'gaussian',ave1,sq1);
+t2=imnoise(a,'salt & pepper',0.1);
+h1=fspecial('gaussian',[3,3],1);
+g1=imfilter(t1,h1,'replicate');
+g2=medfilt2(t1,[3,3]);
+f1=imfilter(t2,h1,'replicate');
+f2=medfilt2(t2,[3,3]);
+figure;
+subplot(331);imshow(a);title("原图");
+subplot(332);imshow(t1);title("加高斯噪声后");
+subplot(333);imshow(t2);title("加椒盐噪声后");
+subplot(334);imshow(g1);title("高斯噪声经高斯滤波");
+subplot(335);imshow(g2);title("高斯噪声经中值滤波");
+subplot(337);imshow(f1);title("椒盐噪声经高斯滤波");
+subplot(338);imshow(f2);title("椒盐噪声经中值滤波");
+
+3.
+I = im2double(imread('lena.bmp'));
+[hei,wid,~] = size(I);
+subplot(2,3,1),imshow(I);
+title('Original Image (courtesy of MIT)');
+LEN = 20;
+THETA = 45;
+PSF = fspecial('motion', LEN, THETA);
+blurred = imfilter(I, PSF, 'conv', 'circular');
+subplot(2,3,2), imshow(blurred); title('Blurred Image');
+If = fft2(blurred);
+Pf = psf2otf(PSF,[hei,wid]);
+deblurred = ifft2(If./Pf);
+subplot(2,3,3), imshow(deblurred); title('Restore Image')
+noise_mean = 0;
+noise_var = 0.00001;
+blurred_noisy = imnoise(blurred, 'gaussian', ...
+                        noise_mean, noise_var);
+subplot(2,3,4), imshow(blurred_noisy)
+title('Simulate Blur and Noise')
+p = [0 -1 0;-1 4 -1;0 -1 0];
+P = psf2otf(p,[hei,wid]);
+gama = 0.001;
+If = fft2(blurred_noisy);
+numerator = conj(Pf);
+denominator = Pf.^2 + gama*(P.^2);
+deblurred2 = ifft2( numerator.*If./ denominator );
+subplot(2,3,5), imshow(deblurred2)
+title('Restoration of Blurred Using Constrained Least Squares Filtering');
+subplot(2,3,6); imshow(deconvreg(blurred_noisy, PSF,0)); title('Regul in Matlab');
